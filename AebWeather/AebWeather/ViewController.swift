@@ -11,11 +11,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     let tableView = UITableView.init(frame: .zero, style: UITableView.Style.grouped)
     let cities = ["Якутск", "Москва", "Санкт-Петербург"]
     let cityCoordinates: Dictionary<String, Coordinates> = [
-        "Якутск": Coordinates(lat: "55.75396", lon: "37.620393"),
+        "Якутск": Coordinates(lat: "62.035454", lon: "129.675476"),
         "Москва": Coordinates(lat: "55.75396", lon: "37.620393"),
         "Санкт-Петербург": Coordinates(lat: "59.937500", lon: "30.308611")
     ]
     let refreshControl = UIRefreshControl()
+    var actualWeather: Dictionary<String, Fact> = [:]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,7 +25,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         self.overrideUserInterfaceStyle = .light
         self.view.backgroundColor = lightBlue
-        self.navigationItem.title = "Table"
+        self.navigationItem.title = "AebWeather"
         self.navigationController?.navigationBar.prefersLargeTitles = true
         self.navigationController?.navigationBar.barTintColor = lightBlue
         self.navigationController?.navigationBar.backgroundColor = lightBlue
@@ -41,6 +42,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableView.addSubview(refreshControl)
         
         self.updateLayout(with: self.view.frame.size)
+        onRefresh()
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -55,13 +57,16 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = self.tableView.dequeueReusableCell(withIdentifier: "TableViewCell", for: indexPath) as! TableViewCell
         cell.textLabel?.text = self.cities[indexPath.row]
-        cell.detailTextLabel?.text = "0°C"
         cell.accessoryType = UITableViewCell.AccessoryType.disclosureIndicator
         return cell
     }
     
+    // called when UITableViewCell is clicked
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         print("row: \(indexPath.row)")
+        let secondViewController = DetailedViewController(fact: actualWeather[cities[indexPath.row]]!, cityName: cities[indexPath.row])
+        self.present(secondViewController, animated: true, completion: nil)
+        tableView.deselectRow(at: indexPath, animated: true)
     }
     
     private func updateLayout(with size: CGSize) {
@@ -70,47 +75,55 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     /// refresh() is called on pull to refresh
     @objc private func refresh(_ sender: AnyObject) {
-        let url = URL(string: "https://api.weather.yandex.ru/v2/forecast?lat=55.75396&lon=37.620393")!
-        var request = URLRequest(url: url)
-        let apiKey = "962d550d-7cda-4fc1-94b8-1feb259a0be5"
-        request.addValue(apiKey, forHTTPHeaderField: "X-Yandex-API-Key")
-        request.httpMethod = "GET"
-        
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data,
-                let response = response as? HTTPURLResponse,
-                error == nil else {                                              // check for fundamental networking error
-                print("error", error ?? "Unknown error")
-                return
-            }
+        onRefresh()
+    }
+    
+    private func onRefresh() {
+        for (city, coordinates) in cityCoordinates {
+            let url = URL(string: "https://api.weather.yandex.ru/v2/forecast?lat=\(coordinates.lat)&lon=\(coordinates.lon)")!
+            var request = URLRequest(url: url)
+            let apiKey = "962d550d-7cda-4fc1-94b8-1feb259a0be5"
+            request.addValue(apiKey, forHTTPHeaderField: "X-Yandex-API-Key")
+            request.httpMethod = "GET"
+            
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                guard let data = data,
+                    let response = response as? HTTPURLResponse,
+                    error == nil else {                                              // check for fundamental networking error
+                    print("error", error ?? "Unknown error")
+                    return
+                }
 
-            guard (200 ... 299) ~= response.statusCode else {                    // check for http errors
-                print("statusCode should be 2xx, but is \(response.statusCode)")
-                print("response = \(response)")
-                return
-            }
+                guard (200 ... 299) ~= response.statusCode else {                    // check for http errors
+                    print("statusCode should be 2xx, but is \(response.statusCode)")
+                    print("response = \(response)")
+                    return
+                }
 
-            let responseString = String(data: data, encoding: .utf8)
-            if responseString != nil {
-                DispatchQueue.main.async {
-                    self.onResponseRetrieved(response: responseString!)
-                    self.refreshControl.endRefreshing()
+                let responseString = String(data: data, encoding: .utf8)
+                if responseString != nil {
+                    DispatchQueue.main.async {
+                        self.onResponseRetrieved(response: responseString!, cityName: city)
+                        self.refreshControl.endRefreshing()
+                    }
                 }
             }
+            task.resume()
         }
-        task.resume()
     }
     
     /// called when weather data was retrieved
-    private func onResponseRetrieved(response: String) {
+    private func onResponseRetrieved(response: String, cityName: String) {
+        print(response)
         let data = response.data(using: .utf8)!
         let decoder = JSONDecoder()
         do {
             let jsonData = try decoder.decode(ResponseData.self, from: data)
-            let factWeather = jsonData.fact
-            
+            actualWeather[cityName] = jsonData.fact
             for cell in tableView.visibleCells {
-                cell.detailTextLabel?.text = String(factWeather.temp)
+                if cell.textLabel?.text == cityName {
+                    cell.detailTextLabel?.text = String(jsonData.fact.temp)
+                }
             }
         } catch {
             print(error)
