@@ -21,28 +21,23 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let lightBlue = UIColor.init(red: 47 / 255, green: 136 / 255, blue: 239 / 255, alpha: 1.0)
-        
-        self.overrideUserInterfaceStyle = .light
-        self.view.backgroundColor = lightBlue
         self.navigationItem.title = "AebWeather"
         self.navigationController?.navigationBar.prefersLargeTitles = true
-        self.navigationController?.navigationBar.barTintColor = lightBlue
-        self.navigationController?.navigationBar.backgroundColor = lightBlue
-        self.navigationController?.navigationItem.largeTitleDisplayMode = .always
         
         tableView.register(TableViewCell.self, forCellReuseIdentifier: "TableViewCell")
-        tableView.backgroundColor = lightBlue
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.refreshControl = refreshControl
+        let y = refreshControl.frame.maxY + tableView.adjustedContentInset.top
+        tableView.setContentOffset(CGPoint(x: 0, y: -y), animated: true)
         self.view.addSubview(tableView)
         
         refreshControl.attributedTitle = NSAttributedString(string: "Pull to refresh")
-        refreshControl.addTarget(self, action: #selector(self.refresh(_:)), for: .valueChanged)
+        refreshControl.addTarget(self, action: #selector(self.onRefresh(_:)), for: .valueChanged)
         tableView.addSubview(refreshControl)
         
         self.updateLayout(with: self.view.frame.size)
-        onRefresh()
+        refreshWeatherData()
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -64,8 +59,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     // called when UITableViewCell is clicked
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         print("row: \(indexPath.row)")
-        let secondViewController = DetailedViewController(fact: actualWeather[cities[indexPath.row]]!, cityName: cities[indexPath.row])
-        self.present(secondViewController, animated: true, completion: nil)
+        let detailedViewController = DetailedViewController(fact: actualWeather[cities[indexPath.row]]!, cityName: cities[indexPath.row])
+        //self.present(detailedViewController, animated: true, completion: nil)
+        self.navigationController?.pushViewController(detailedViewController, animated: true)
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
@@ -74,11 +70,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     /// refresh() is called on pull to refresh
-    @objc private func refresh(_ sender: AnyObject) {
-        onRefresh()
+    @objc private func onRefresh(_ sender: AnyObject) {
+        refreshWeatherData()
     }
     
-    private func onRefresh() {
+    private func refreshWeatherData() {
         for (city, coordinates) in cityCoordinates {
             let url = URL(string: "https://api.weather.yandex.ru/v2/forecast?lat=\(coordinates.lat)&lon=\(coordinates.lon)")!
             var request = URLRequest(url: url)

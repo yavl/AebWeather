@@ -24,38 +24,89 @@ class DetailedViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        overrideUserInterfaceStyle = .light
-        
-        let stackView = UIStackView()
-        stackView.axis = NSLayoutConstraint.Axis.vertical
-        stackView.distribution  = UIStackView.Distribution.equalSpacing
-        stackView.alignment = UIStackView.Alignment.center
-        stackView.spacing = 16.0
-        self.view.addSubview(stackView)
-        self.view.backgroundColor = UIColor.systemBackground
+        let labelColor: UIColor
+        if traitCollection.userInterfaceStyle == .light {
+            labelColor = UIColor.darkGray
+        } else {
+            labelColor = UIColor.lightGray
+        }
         
         let cityNameLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
-        cityNameLabel.center = CGPoint(x: 160, y: 80)
         cityNameLabel.textAlignment = NSTextAlignment.center
         cityNameLabel.text = String(cityName)
-        cityNameLabel.textColor = UIColor.darkGray
+        cityNameLabel.textColor = labelColor
         cityNameLabel.font = cityNameLabel.font.withSize(24)
-        stackView.addSubview(cityNameLabel)
+        cityNameLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        scrollViewContainer.addArrangedSubview(cityNameLabel)
         
         let tempLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
-        tempLabel.center = CGPoint(x: 160, y: 150)
         tempLabel.textAlignment = NSTextAlignment.center
         tempLabel.text = String(fact.temp) + "°C"
-        tempLabel.textColor = UIColor.darkGray
+        tempLabel.textColor = labelColor
         tempLabel.font = tempLabel.font.withSize(72)
-        stackView.addSubview(tempLabel)
+        tempLabel.heightAnchor.constraint(equalToConstant: 80).isActive = true
+        scrollViewContainer.addArrangedSubview(tempLabel)
         
         let conditionLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
-        conditionLabel.center = CGPoint(x: 160, y: 220)
         conditionLabel.textAlignment = NSTextAlignment.center
         conditionLabel.text = String(fact.condition)
-        conditionLabel.textColor = UIColor.darkGray
+        conditionLabel.textColor = labelColor
         conditionLabel.font = tempLabel.font.withSize(24)
-        stackView.addSubview(conditionLabel)
+        conditionLabel.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        scrollViewContainer.addArrangedSubview(conditionLabel)
+
+        view.addSubview(scrollView)
+        scrollView.addSubview(scrollViewContainer)
+
+        scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        scrollView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
+        scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        scrollView.backgroundColor = UIColor.systemBackground
+
+        scrollViewContainer.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor).isActive = true
+        scrollViewContainer.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor).isActive = true
+        scrollViewContainer.topAnchor.constraint(equalTo: scrollView.topAnchor).isActive = true
+        scrollViewContainer.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor).isActive = true
+        // this is important for scrolling
+        scrollViewContainer.widthAnchor.constraint(equalTo: scrollView.widthAnchor).isActive = true
     }
+
+    let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        return scrollView
+    }()
+
+    let scrollViewContainer: UIStackView = {
+        let view = UIStackView()
+
+        view.axis = .vertical
+        view.spacing = 10
+
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+
+    let redView: UIView = {
+        let view = UIView()
+        view.heightAnchor.constraint(equalToConstant: 500).isActive = true
+        view.backgroundColor = .red
+        return view
+    }()
+
+    let blueView: UIView = {
+        let view = UIView()
+        view.heightAnchor.constraint(equalToConstant: 200).isActive = true
+        view.backgroundColor = .blue
+        return view
+    }()
+
+    let greenView: UIView = {
+        let view = UIView()
+        view.heightAnchor.constraint(equalToConstant: 1200).isActive = true
+        view.backgroundColor = .green
+        return view
+    }()
 }
