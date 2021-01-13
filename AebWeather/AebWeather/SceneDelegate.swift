@@ -20,7 +20,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.windowScene = windowScene
 
         let navigationController = UINavigationController(rootViewController:  ViewController())
-        //UINavigationBar.appearance().isTranslucent = false
         window?.rootViewController = navigationController
         window?.overrideUserInterfaceStyle = .dark
         window?.makeKeyAndVisible()
