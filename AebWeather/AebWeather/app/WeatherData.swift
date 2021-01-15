@@ -11,6 +11,7 @@ import UIKit
 
 struct ResponseData: Decodable {
     let fact: Fact
+    let forecasts: [Forecasts]
 }
 
 // Current weather data
@@ -18,14 +19,30 @@ struct Fact: Decodable {
     let temp: Int
     let feels_like: Int
     let condition: String
+    let wind_speed: Float
+    let wind_dir: String
+    let humidity: Int
+    let pressure_mm: Float
 }
 
 // Forecast for specific date
-struct Forecast: Decodable {
+struct Forecasts: Decodable {
+    let parts: Parts
     let date: String
+}
+
+struct Parts: Decodable {
+    let day: Day
+}
+
+struct Day: Decodable {
     let temp_avg: Int
     let feels_like: Int
     let condition: String
+    let wind_speed: Float
+    let wind_dir: String
+    let humidity: Int
+    let pressure_mm: Float
 }
 
 struct Coordinates {
