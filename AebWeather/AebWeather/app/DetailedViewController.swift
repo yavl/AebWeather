@@ -113,7 +113,6 @@ class DetailedViewController: UIViewController, UITableViewDelegate, UITableView
         addWeatherLabel(text: "Давление: " + pressure_mm + " мм рт.ст", size: 24, scrollViewContainer: scrollViewContainer)
         
         if (forecastIndex < 0) {
-            scrollView.refreshControl = UIRefreshControl()
             tableView.register(TableViewCell.self, forCellReuseIdentifier: "TableViewCell")
             tableView.delegate = self
             tableView.dataSource = self

@@ -39,7 +39,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         refreshControl.attributedTitle = NSAttributedString(string: "Потяните для обновления")
         refreshControl.addTarget(self, action: #selector(self.onRefresh(_:)), for: .valueChanged)
-        tableView.addSubview(refreshControl)
         
         self.updateLayout(with: self.view.frame.size)
         refreshWeatherData()
@@ -94,13 +93,17 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                     let response = response as? HTTPURLResponse,
                     error == nil else {
                     print("error", error ?? "Unknown error")
-                    self.showAlert(title: "Ошибка", message: error.debugDescription)
+                    DispatchQueue.main.async {
+                        self.showAlert(title: "Ошибка", message: error.debugDescription)
+                    }
                     return
                 }
 
                 guard (200 ... 299) ~= response.statusCode else {
                     print("response = \(response)")
-                    self.showAlert(title: "Ошибка", message: "Ошибка HTTP: " + String(response.statusCode))
+                    DispatchQueue.main.async {
+                        self.showAlert(title: "Ошибка", message: "Ошибка HTTP: " + String(response.statusCode))
+                    }
                     return
                 }
 
